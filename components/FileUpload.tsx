@@ -1,62 +1,33 @@
-
-'use client'
-import { useState } from 'react'
-import axios from 'axios'
-import ProgressBar from './ProgressBar'
+// components/FileUpload.tsx
+'use client';
+import { useState } from 'react';
 
 export default function FileUpload() {
-  const [file, setFile] = useState<File | null>(null)
-  const [progress, setProgress] = useState(0)
-  const [embedUrl, setEmbedUrl] = useState('')
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleUpload = async () => {
-    if (!file) return
-    const form = new FormData()
-    form.append('file', file)
+    if (!file) return;
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
 
-    const res = await axios.post('/api/upload', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      onUploadProgress: (e) => {
-        if (e.total) {
-          const percent = Math.round((e.loaded * 100) / e.total)
-          setProgress(percent)
-        }
-      }
-    })
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
 
-    const { slug } = res.data
-    setEmbedUrl(\`\${window.location.origin}/e/\${slug}\`)
-  }
+    const data = await res.json();
+    setLoading(false);
+    alert(`File uploaded! Embed URL: ${data.embedUrl}`);
+  };
 
   return (
-    <div className="space-y-4">
-      <input
-        type="file"
-        onChange={(e) => {
-          setFile(e.target.files?.[0] || null)
-          setProgress(0)
-          setEmbedUrl('')
-        }}
-      />
-      <button
-        onClick={handleUpload}
-        className="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700 transition"
-      >
-        Upload
+    <div className="p-4 border rounded">
+      <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+      <button onClick={handleUpload} disabled={!file || loading} className="ml-2">
+        {loading ? 'Uploading...' : 'Upload'}
       </button>
-      <ProgressBar value={progress} />
-      {embedUrl && (
-        <div className="mt-4">
-          <p className="text-green-700">Upload success! Embed link:</p>
-          <input
-            type="text"
-            readOnly
-            value={embedUrl}
-            className="border p-2 w-full"
-            onClick={(e) => (e.target as HTMLInputElement).select()}
-          />
-        </div>
-      )}
     </div>
-  )
+  );
 }
