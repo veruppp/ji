@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '@/lib/db.ts'
 import { notFound } from 'next/navigation'
 
 export default async function EmbedPage({ params }: { params: { slug: string } }) {
